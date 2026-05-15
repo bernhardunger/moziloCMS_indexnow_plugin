@@ -49,6 +49,11 @@ class indexnow extends Plugin {
     }
 
     function getConfig() {
+        $effectiveHost     = $this->getEffectiveHost();
+        $effectiveSitemap  = $this->getEffectiveSitemapUrl();
+        $hostHint          = $effectiveHost    !== '' ? ' Aktuell erkannt: <code>' . htmlspecialchars($effectiveHost,   ENT_QUOTES, 'UTF-8') . '</code>' : '';
+        $sitemapHint       = $effectiveSitemap !== '' ? ' Aktuell abgeleitet: <code>' . htmlspecialchars($effectiveSitemap, ENT_QUOTES, 'UTF-8') . '</code>' : '';
+
         return array(
             // --admin~~ erzeugt einen Button direkt in der Plugin-Konfiguration im Backend.
             // Klick öffnet das Admin-Panel via ?pluginadmin=indexnow → getContent('').
@@ -63,16 +68,15 @@ class indexnow extends Plugin {
             ),
             'host' => array(
                 'type'        => 'text',
-                'description' => 'Hostname ohne Schema (z.B. www.example.com). Leer lassen für automatische Erkennung via HTTP_HOST.',
+                'description' => 'Hostname ohne Schema (z.B. www.example.com). Leer lassen für automatische Erkennung via HTTP_HOST.' . $hostHint,
             ),
             'sitemap_url' => array(
                 'type'        => 'text',
-                'description' => 'Vollständige URL der sitemap.xml. Leer lassen – wird automatisch aus dem Host abgeleitet (https://{host}/sitemap.xml).',
+                'description' => 'Vollständige URL der sitemap.xml. Leer lassen – wird automatisch aus dem Host abgeleitet.' . $sitemapHint,
             ),
             'endpoint' => array(
                 'type'        => 'text',
-                'description' => 'IndexNow Endpunkt. Leer lassen – Standard ' . self::DEFAULT_ENDPOINT
-                               . ' verteilt URLs intern an alle teilnehmenden Suchmaschinen.',
+                'description' => 'IndexNow Endpunkt. Leer lassen – Standard: <code>' . self::DEFAULT_ENDPOINT . '</code> (verteilt intern an alle teilnehmenden Suchmaschinen).',
             ),
             'debug_mode' => array(
                 'type'        => 'checkbox',
@@ -143,7 +147,11 @@ automatisch korrekt übermittelt.</p>
     private function getEffectiveHost(): string {
         $configured = $this->getSetting('host');
         if ($configured !== '') {
-            return $configured;
+            // Pfad-Anteile entfernen falls jemand z.B. "localhost/stb-hader" einträgt.
+            // parse_url gibt bei reinen Hostnamen ohne Schema keinen 'host'-Key zurück,
+            // daher Schema voranstellen und anschließend wieder entfernen.
+            $parsed = parse_url('http://' . $configured);
+            return isset($parsed['host']) ? $parsed['host'] : $configured;
         }
 
         // Auto-Detect via HTTP_HOST (Validierung analog zu _seo_urls::getSafeOrigin)
@@ -371,7 +379,8 @@ HTML;
             return 'Fehler: Host nicht ermittelbar. Bitte manuell in den Einstellungen hinterlegen.';
         }
         if (!preg_match('/^[a-zA-Z0-9.\-]+(:\d+)?$/', $host)) {
-            return 'Fehler: Host ist ungültig (erwartet z.B. www.example.com).';
+            return 'Fehler: Host ist ungültig (ermittelter Wert: "' . $host . '").'
+                 . "\n" . 'Bitte den Hostnamen manuell in den Plugin-Einstellungen eintragen.';
         }
         if ($sitemapUrl === '') {
             return 'Fehler: Sitemap-URL nicht ermittelbar.';
