@@ -43,8 +43,10 @@ class indexnow extends Plugin {
         return '';
     }
 
-    function getPluginContent($value) {
-        if ($value === 'admin_panel') {
+    function getContent($value) {
+        // Wird aufgerufen via {PLUGIN(indexnow|admin_panel)} im Seiteninhalt
+        // sowie via ?pluginadmin=indexnow aus dem CMS-Backend (--admin~~ Mechanismus).
+        if ($value === 'admin_panel' || $value === '') {
             return $this->renderAdminPanel();
         }
         return '';
@@ -52,6 +54,13 @@ class indexnow extends Plugin {
 
     function getConfig() {
         return array(
+            // --admin~~ erzeugt einen Button direkt in der Plugin-Konfiguration im Backend.
+            // Klick öffnet das Admin-Panel via ?pluginadmin=indexnow → getContent('').
+            '--admin~~' => array(
+                'description' => 'URLs manuell an IndexNow übermitteln.',
+                'buttontext'  => 'Admin-Panel öffnen',
+                'datei_admin' => 'index.php',
+            ),
             'api_key' => array(
                 'type'        => 'text',
                 'description' => 'IndexNow API-Key (alphanumerisch, 8–128 Zeichen; identisch mit dem Dateinamen der Key-Datei)',
@@ -66,17 +75,23 @@ class indexnow extends Plugin {
             ),
             'endpoint' => array(
                 'type'        => 'text',
-                // 'value' wird von moziloCMS ggf. als Vorbelegung des Formularfeldes
-                // verwendet. Falls nicht unterstützt, greift getEffectiveEndpoint()
-                // auf DEFAULT_ENDPOINT zurück – das Panel zeigt den Wert in jedem Fall.
-                'value'       => self::DEFAULT_ENDPOINT,
-                'description' => 'IndexNow Endpunkt (Leer lassen – Standard ' . self::DEFAULT_ENDPOINT
-                               . ' verteilt URLs intern an alle teilnehmenden Suchmaschinen).',
+                'description' => 'IndexNow Endpunkt. Leer lassen – Standard ' . self::DEFAULT_ENDPOINT
+                               . ' verteilt URLs intern an alle teilnehmenden Suchmaschinen.',
             ),
             'debug_mode' => array(
                 'type'        => 'checkbox',
                 'description' => 'Debug-Modus: Zeigt extrahierte URLs und JSON-Payload im Browser – sendet nichts an IndexNow.',
             ),
+        );
+    }
+
+    /**
+     * Setzt Standardwerte beim ersten Installieren des Plugins.
+     * Wird von moziloCMS aufgerufen wenn plugin.conf.php neu angelegt wird.
+     */
+    function getDefaultSettings() {
+        return array(
+            'endpoint' => self::DEFAULT_ENDPOINT,
         );
     }
 
