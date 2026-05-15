@@ -9,3 +9,9 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Composer
+vendor/
+
+# PHPUnit
+.phpunit.result.cache
