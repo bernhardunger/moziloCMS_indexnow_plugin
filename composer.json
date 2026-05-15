@@ -1,0 +1,11 @@
+{
+    "name": "bernhardunger/mozilocms-indexnow-plugin",
+    "description": "moziloCMS IndexNow Plugin – automatisierte URL-Übermittlung an die IndexNow API",
+    "license": "GPL-2.0-or-later",
+    "require-dev": {
+        "phpunit/phpunit": "^12"
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
