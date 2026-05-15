@@ -105,12 +105,12 @@ const DEFAULT_ENDPOINT // https://api.indexnow.org/indexnow (einzige Pflegestell
 
 ## Lokale Entwicklung
 
-Laragon nutzt Unterordner-Setup (`localhost/stb-hader/`). Für lokale Tests:
+Laragon nutzt Unterordner-Setup (z.B. `localhost/projektname/`). Für lokale Tests:
 
 | Feld | Lokaler Wert |
 |---|---|
-| `host` | `www.steuerkanzlei-hader.de` |
-| `sitemap_url` | `https://www.steuerkanzlei-hader.de/sitemap.xml` |
+| `host` | Produktiv-Hostname (z.B. `www.example.com`) |
+| `sitemap_url` | Produktiv-Sitemap (z.B. `https://www.example.com/sitemap.xml`) |
 | `debug_mode` | aktiviert |
 
 Damit wird die echte Produktiv-Sitemap abgerufen und der JSON-Payload angezeigt –
