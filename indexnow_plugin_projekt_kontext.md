@@ -49,26 +49,32 @@ getEffectiveEndpoint()       // Config → DEFAULT_ENDPOINT Fallback
 isDebugMode()                // debug_mode === 'true'
 
 // Kern-Logik
-runSubmission()              // Validierung → Sitemap → URLs → IndexNow oder Debug
+runSubmission()              // Orchestrierung: validate → fetch → extract → submit/debug
+validateSettings()           // Validierung aller Eingaben → null (ok) oder Fehlermeldung
 buildDebugOutput()           // Formatierte Debug-Ausgabe (URL-Liste + JSON-Payload)
 fetchUrl($url)               // HTTP GET via file_get_contents + Stream-Context
 extractUrls($xml, $host)     // <loc>-Extraktion, Host-Filter, Deduplizierung
 sendToIndexNow(...)          // HTTP POST, Statuscode auswerten
+buildPayload(...)            // IndexNow-Payload-Array (einzige Pflegestelle)
 parseHttpStatus($headers)    // HTTP-Statuscode aus $http_response_header
 interpretIndexNowResponse()  // Statuscode → menschenlesbare Meldung
 
 // Admin-Panel (Orchestrierung)
 renderAdminPanel()           // POST-Handling + Orchestrierung, kein HTML
-buildPanelHtml(...)          // Reines HTML-Template, keine Logik
+buildPanelHtml(...)          // Reines HTML-Template (6 Parameter), keine Logik
 
 // Admin-Panel (Teilblöcke)
 getAdminStyles()             // CSS-Block
 buildWarnings()              // Debug-Banner + Warnungen + Key-Datei-Hinweis
+buildKeyFileHint()           // Key-Datei-Hinweis (nur wenn apiKey + host gesetzt)
+buildSubmitButton()          // CSRF-Token, Disabled-State, Debug-Variante
 buildConfigTable()           // Host/Sitemap/Endpunkt-Tabelle mit Herkunftshinweis
+getValueSource()             // 'konfiguriert' oder Fallback (z.B. 'auto-erkannt')
 buildResultHtml()            // Ergebnis-Block nach Submit (success | error)
 renderNotice($type, $msg)    // warning | success | error | debug Block
 
 // Sicherheit
+ensureSession()              // Session-Start sicherstellen (einzige Pflegestelle)
 generateCsrfToken()          // bin2hex(random_bytes(16)), gespeichert in Session
 validateCsrfToken()          // hash_equals(), One-Time-Token
 getSetting($key)             // sicheres Auslesen aus $this->settings
@@ -141,4 +147,12 @@ ohne Übermittlung an IndexNow. Auf Produktion beide Felder leer lassen.
 - Host-Validierung mit Pfad-Stripping via `parse_url`
 - Refactoring: `renderAdminPanel()` in `buildPanelHtml()`, `getAdminStyles()`,
   `buildWarnings()`, `buildConfigTable()`, `buildResultHtml()` aufgeteilt
-- PHPUnit 12 Testsuite (46 Tests)
+- Refactoring: `buildPayload()` aus `sendToIndexNow()` und `buildDebugOutput()` extrahiert
+- Refactoring: `ensureSession()` aus CSRF-Methoden extrahiert
+- Refactoring (SRP/Clean Code/SLA):
+  - `buildSubmitButton()` – Button-Logik aus `buildPanelHtml()` (10 → 6 Parameter)
+  - `validateSettings()` – Validierung aus `runSubmission()` extrahiert
+  - `buildKeyFileHint()` – aus `buildWarnings()` extrahiert
+  - `getValueSource()` – Ternary-Duplizierung in `buildConfigTable()` eliminiert
+  - `$keyFileUrl` in `interpretIndexNowResponse()` direkt in `case 403` verschoben
+- PHPUnit 12 Testsuite (~74 Tests)
