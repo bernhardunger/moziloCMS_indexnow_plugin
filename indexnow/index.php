@@ -68,16 +68,16 @@ class indexnow extends Plugin {
                 'type'        => 'text',
                 'description' => 'IndexNow Endpunkt. Leer lassen – Standard:<br><code>' . self::DEFAULT_ENDPOINT . '</code> (verteilt intern an alle teilnehmenden Suchmaschinen).',
             ),
-            'debug_mode' => array(
-                'type'        => 'checkbox',
-                'description' => 'Debug-Modus: Zeigt extrahierte URLs und JSON-Payload im Browser – sendet nichts an IndexNow.',
-            ),
-            // --admin~~ erzeugt einen Button am Ende der Plugin-Konfiguration im Backend.
+            // --admin~~ erzeugt einen Button in der Plugin-Konfiguration im Backend.
             // Klick öffnet das Admin-Panel via ?pluginadmin=indexnow → getContent('').
             '--admin~~' => array(
                 'description' => 'URLs manuell an IndexNow übermitteln.',
                 'buttontext'  => 'Admin-Panel öffnen',
                 'datei_admin' => 'index.php',
+            ),
+            'debug_mode' => array(
+                'type'        => 'checkbox',
+                'description' => 'Debug-Modus: Zeigt extrahierte URLs und JSON-Payload im Browser – sendet nichts an IndexNow.',
             ),
         );
     }
