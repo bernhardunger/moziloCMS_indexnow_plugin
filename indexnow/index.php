@@ -48,17 +48,10 @@ class indexnow extends Plugin {
     function getConfig() {
         $effectiveHost     = $this->getEffectiveHost();
         $effectiveSitemap  = $this->getEffectiveSitemapUrl();
-        $hostHint          = $effectiveHost    !== '' ? ' Aktuell erkannt: <code>' . htmlspecialchars($effectiveHost,   ENT_QUOTES, 'UTF-8') . '</code>' : '';
-        $sitemapHint       = $effectiveSitemap !== '' ? ' Aktuell abgeleitet: <code>' . htmlspecialchars($effectiveSitemap, ENT_QUOTES, 'UTF-8') . '</code>' : '';
+        $hostHint          = $effectiveHost    !== '' ? '<br>Aktuell erkannt: <code>' . htmlspecialchars($effectiveHost,   ENT_QUOTES, 'UTF-8') . '</code>' : '';
+        $sitemapHint       = $effectiveSitemap !== '' ? '<br>Aktuell abgeleitet: <code>' . htmlspecialchars($effectiveSitemap, ENT_QUOTES, 'UTF-8') . '</code>' : '';
 
         return array(
-            // --admin~~ erzeugt einen Button direkt in der Plugin-Konfiguration im Backend.
-            // Klick öffnet das Admin-Panel via ?pluginadmin=indexnow → getContent('').
-            '--admin~~' => array(
-                'description' => 'URLs manuell an IndexNow übermitteln.',
-                'buttontext'  => 'Admin-Panel öffnen',
-                'datei_admin' => 'index.php',
-            ),
             'api_key' => array(
                 'type'        => 'text',
                 'description' => 'IndexNow API-Key (alphanumerisch, 8–128 Zeichen; identisch mit dem Dateinamen der Key-Datei)',
@@ -73,11 +66,18 @@ class indexnow extends Plugin {
             ),
             'endpoint' => array(
                 'type'        => 'text',
-                'description' => 'IndexNow Endpunkt. Leer lassen – Standard: <code>' . self::DEFAULT_ENDPOINT . '</code> (verteilt intern an alle teilnehmenden Suchmaschinen).',
+                'description' => 'IndexNow Endpunkt. Leer lassen – Standard:<br><code>' . self::DEFAULT_ENDPOINT . '</code> (verteilt intern an alle teilnehmenden Suchmaschinen).',
             ),
             'debug_mode' => array(
                 'type'        => 'checkbox',
                 'description' => 'Debug-Modus: Zeigt extrahierte URLs und JSON-Payload im Browser – sendet nichts an IndexNow.',
+            ),
+            // --admin~~ erzeugt einen Button am Ende der Plugin-Konfiguration im Backend.
+            // Klick öffnet das Admin-Panel via ?pluginadmin=indexnow → getContent('').
+            '--admin~~' => array(
+                'description' => 'URLs manuell an IndexNow übermitteln.',
+                'buttontext'  => 'Admin-Panel öffnen',
+                'datei_admin' => 'index.php',
             ),
         );
     }
