@@ -11,9 +11,6 @@ if (!defined('IS_CMS')) die();
  * Liest die sitemap.xml per HTTP-Abruf, damit Slug-URLs des _seo_urls Plugins
  * korrekt übernommen werden.
  *
- * Einbindung im Template oder auf einer CMS-Seite:
- *   {PLUGIN(indexnow|admin_panel)}
- *
  * Voraussetzung: API-Key-Datei unter https://{host}/{key}.txt erreichbar.
  *
  * Funktionen:

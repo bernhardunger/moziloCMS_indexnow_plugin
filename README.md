@@ -35,11 +35,7 @@ Companion-Plugin zu [_seo_urls](https://github.com/bernhardunger/moziloCMS_seo_p
 1. Ordner `indexnow/` in das `plugins/`-Verzeichnis des CMS hochladen
 2. Plugin im moziloCMS-Backend aktivieren
 3. API-Key konfigurieren (siehe Einrichtung)
-4. Eine CMS-Seite anlegen (z.B. „IndexNow") und den Plugin-Tag in den Seiteninhalt einfügen:
-   ```
-   {PLUGIN(indexnow|admin_panel)}
-   ```
-5. Seite im CMS mit einem Passwortschutz absichern
+4. Admin-Panel direkt über den Button in der Plugin-Konfiguration aufrufen
 
 ---
 
@@ -88,16 +84,7 @@ Der Standard-Endpunkt `https://api.indexnow.org/indexnow` reicht vollständig au
 
 ## Verwendung
 
-### Admin-Panel einbinden
-
-Das Plugin rendert sein Admin-Panel als normalen HTML-Block. Um den Submit-Button zugänglich zu machen:
-
-1. Im moziloCMS-Backend eine neue Seite anlegen, z.B. unter der Kategorie „Admin"
-2. In den Seiteninhalt einfügen:
-   ```
-   {PLUGIN(indexnow|admin_panel)}
-   ```
-3. Die Seite im CMS mit einem Passwortschutz versehen – moziloCMS bietet dafür eine eingebaute Funktion unter den Seiteneigenschaften
+Das Admin-Panel ist direkt über den Button **„Admin-Panel öffnen"** in der Plugin-Konfiguration im moziloCMS-Backend erreichbar – keine separate CMS-Seite nötig.
 
 Das Panel zeigt beim Aufruf:
 
