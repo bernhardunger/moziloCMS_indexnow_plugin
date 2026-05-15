@@ -70,8 +70,8 @@ class indexnow extends Plugin {
                 // verwendet. Falls nicht unterstützt, greift getEffectiveEndpoint()
                 // auf DEFAULT_ENDPOINT zurück – das Panel zeigt den Wert in jedem Fall.
                 'value'       => self::DEFAULT_ENDPOINT,
-                'description' => 'IndexNow Endpunkt. Standard: ' . self::DEFAULT_ENDPOINT
-                               . ' – alternativ: https://www.bing.com/indexnow oder https://yandex.com/indexnow',
+                'description' => 'IndexNow Endpunkt (Leer lassen – Standard ' . self::DEFAULT_ENDPOINT
+                               . ' verteilt URLs intern an alle teilnehmenden Suchmaschinen).',
             ),
             'debug_mode' => array(
                 'type'        => 'checkbox',
