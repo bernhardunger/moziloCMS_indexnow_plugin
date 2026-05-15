@@ -54,7 +54,7 @@ class indexnow extends Plugin {
         return array(
             'api_key' => array(
                 'type'        => 'text',
-                'description' => 'IndexNow API-Key (alphanumerisch, 8–128 Zeichen; identisch mit dem Dateinamen der Key-Datei)',
+                'description' => '* IndexNow API-Key (alphanumerisch, 8–128 Zeichen; identisch mit dem Dateinamen der Key-Datei)',
             ),
             'host' => array(
                 'type'        => 'text',
