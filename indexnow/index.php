@@ -223,21 +223,15 @@ automatisch korrekt übermittelt.</p>
         $host      = $this->getEffectiveHost();
         $sitemap   = $this->getEffectiveSitemapUrl();
         $version   = self::VERSION;
-        $csrfToken = $this->generateCsrfToken();
-
-        $disabled    = ($apiKey === '' || $host === '' || $sitemap === '') ? ' disabled' : '';
-        $buttonTitle = $disabled ? ' title="Bitte zuerst alle Einstellungen konfigurieren."' : '';
-        $buttonClass = $isDebug ? 'in-btn in-btn-debug' : 'in-btn';
-        $buttonLabel = $isDebug ? '🔍 Debug: URLs anzeigen (kein API-Call)' : 'Alle URLs jetzt übermitteln';
 
         $styles      = $this->getAdminStyles();
         $warnings    = $this->buildWarnings($apiKey, $host, $sitemap, $isDebug);
         $configTable = $this->buildConfigTable($host, $sitemap, $this->getEffectiveEndpoint());
         $resultHtml  = $this->buildResultHtml($submitResult);
+        $submitBtn   = $this->buildSubmitButton($apiKey, $host, $sitemap, $isDebug);
 
         return $this->buildPanelHtml(
-            $styles, $warnings, $configTable, $resultHtml,
-            $csrfToken, $buttonClass, $buttonLabel, $disabled, $buttonTitle, $version
+            $styles, $warnings, $configTable, $resultHtml, $submitBtn, $version
         );
     }
 
@@ -249,11 +243,7 @@ automatisch korrekt übermittelt.</p>
         string $warnings,
         string $configTable,
         string $resultHtml,
-        string $csrfToken,
-        string $buttonClass,
-        string $buttonLabel,
-        string $disabled,
-        string $buttonTitle,
+        string $submitBtn,
         string $version
     ): string {
         return <<<HTML
@@ -264,15 +254,34 @@ automatisch korrekt übermittelt.</p>
   {$warnings}
   {$configTable}
   {$resultHtml}
+  {$submitBtn}
 
+  <p class="in-meta">indexnow {$version}</p>
+</div>
+HTML;
+    }
+
+    /**
+     * Baut den Submit-Button mit CSRF-Token, Disabled-State und Debug-Variante.
+     */
+    private function buildSubmitButton(
+        string $apiKey,
+        string $host,
+        string $sitemapUrl,
+        bool   $isDebug
+    ): string {
+        $csrfToken   = $this->generateCsrfToken();
+        $disabled    = ($apiKey === '' || $host === '' || $sitemapUrl === '') ? ' disabled' : '';
+        $buttonTitle = $disabled ? ' title="Bitte zuerst alle Einstellungen konfigurieren."' : '';
+        $buttonClass = $isDebug ? 'in-btn in-btn-debug' : 'in-btn';
+        $buttonLabel = $isDebug ? '🔍 Debug: URLs anzeigen (kein API-Call)' : 'Alle URLs jetzt übermitteln';
+
+        return <<<HTML
   <form method="post" action="">
     <input type="hidden" name="indexnow_submit" value="1">
     <input type="hidden" name="indexnow_csrf"   value="{$csrfToken}">
     <button class="{$buttonClass}" type="submit"{$disabled}{$buttonTitle}>{$buttonLabel}</button>
   </form>
-
-  <p class="in-meta">indexnow {$version}</p>
-</div>
 HTML;
     }
 
@@ -330,13 +339,25 @@ CSS;
         if ($sitemapUrl === '') {
             $output .= $this->renderNotice('warning', '⚠ Sitemap-URL konnte nicht abgeleitet werden.');
         }
-        if ($apiKey !== '' && $host !== '') {
-            $keyFileUrl = 'https://' . htmlspecialchars($host,   ENT_QUOTES, 'UTF-8')
-                        . '/'        . htmlspecialchars($apiKey, ENT_QUOTES, 'UTF-8') . '.txt';
-            $output .= '<p class="in-hint">🔑 Key-Datei muss erreichbar sein unter: <code>' . $keyFileUrl . '</code></p>';
-        }
+
+        $output .= $this->buildKeyFileHint($apiKey, $host);
 
         return $output;
+    }
+
+    /**
+     * Gibt den Key-Datei-Hinweis zurück wenn API-Key und Host bekannt sind.
+     * Gibt einen leeren String zurück wenn eine der Angaben fehlt.
+     */
+    private function buildKeyFileHint(string $apiKey, string $host): string {
+        if ($apiKey === '' || $host === '') {
+            return '';
+        }
+
+        $keyFileUrl = 'https://' . htmlspecialchars($host,   ENT_QUOTES, 'UTF-8')
+                    . '/'        . htmlspecialchars($apiKey, ENT_QUOTES, 'UTF-8') . '.txt';
+
+        return '<p class="in-hint">🔑 Key-Datei muss erreichbar sein unter: <code>' . $keyFileUrl . '</code></p>';
     }
 
     /**
@@ -344,9 +365,9 @@ CSS;
      */
     private function buildConfigTable(string $host, string $sitemapUrl, string $endpoint): string {
 
-        $hostSource     = ($this->getSetting('host') !== '')       ? 'konfiguriert' : 'auto-erkannt';
-        $sitemapSource  = ($this->getSetting('sitemap_url') !== '') ? 'konfiguriert'  : 'abgeleitet';
-        $endpointSource = ($this->getSetting('endpoint') !== '')    ? 'konfiguriert'  : 'Standard';
+        $hostSource     = $this->getValueSource('host',        'auto-erkannt');
+        $sitemapSource  = $this->getValueSource('sitemap_url', 'abgeleitet');
+        $endpointSource = $this->getValueSource('endpoint',    'Standard');
 
         $hostEsc     = htmlspecialchars($host,       ENT_QUOTES, 'UTF-8');
         $sitemapEsc  = htmlspecialchars($sitemapUrl, ENT_QUOTES, 'UTF-8');
@@ -370,6 +391,14 @@ CSS;
   </table>
 </div>
 HTML;
+    }
+
+    /**
+     * Gibt 'konfiguriert' zurück wenn der Einstellungswert manuell gesetzt ist,
+     * sonst den übergebenen Fallback-Text (z.B. 'auto-erkannt', 'Standard').
+     */
+    private function getValueSource(string $settingKey, string $fallback): string {
+        return $this->getSetting($settingKey) !== '' ? 'konfiguriert' : $fallback;
     }
 
     /**
@@ -415,7 +444,41 @@ HTML;
         $sitemapUrl = $this->getEffectiveSitemapUrl();
         $endpoint   = $this->getEffectiveEndpoint();
 
-        // --- Eingaben validieren ---
+        $validationError = $this->validateSettings($apiKey, $host, $sitemapUrl, $endpoint);
+        if ($validationError !== null) {
+            return $validationError;
+        }
+
+        $xml = $this->fetchUrl($sitemapUrl);
+        if ($xml === null) {
+            return 'Fehler: Sitemap konnte nicht abgerufen werden.' . "\n" . 'URL: ' . $sitemapUrl;
+        }
+        if (trim($xml) === '') {
+            return 'Fehler: Sitemap-Antwort ist leer.';
+        }
+
+        $urls = $this->extractUrls($xml, $host);
+        if (empty($urls)) {
+            return 'Fehler: Keine gültigen URLs für Host "' . $host . '" in der Sitemap gefunden.';
+        }
+
+        if ($this->isDebugMode()) {
+            return $this->buildDebugOutput($host, $apiKey, $endpoint, $urls);
+        }
+
+        return $this->sendToIndexNow($endpoint, $host, $apiKey, $urls);
+    }
+
+    /**
+     * Validiert alle Eingaben vor der Übermittlung.
+     * Gibt null zurück wenn alles gültig ist, sonst eine Fehlermeldung.
+     */
+    private function validateSettings(
+        string $apiKey,
+        string $host,
+        string $sitemapUrl,
+        string $endpoint
+    ): ?string {
 
         if ($apiKey === '') {
             return 'Fehler: API-Key nicht konfiguriert.';
@@ -443,32 +506,7 @@ HTML;
             return 'Fehler: Endpunkt ist keine gültige URL.';
         }
 
-        // --- Sitemap per HTTP abrufen ---
-
-        $xml = $this->fetchUrl($sitemapUrl);
-        if ($xml === null) {
-            return 'Fehler: Sitemap konnte nicht abgerufen werden.' . "\n" . 'URL: ' . $sitemapUrl;
-        }
-        if (trim($xml) === '') {
-            return 'Fehler: Sitemap-Antwort ist leer.';
-        }
-
-        // --- URLs extrahieren ---
-
-        $urls = $this->extractUrls($xml, $host);
-        if (empty($urls)) {
-            return 'Fehler: Keine gültigen URLs für Host "' . $host . '" in der Sitemap gefunden.';
-        }
-
-        // --- Debug-Modus: Ausgabe statt Übermittlung ---
-
-        if ($this->isDebugMode()) {
-            return $this->buildDebugOutput($host, $apiKey, $endpoint, $urls);
-        }
-
-        // --- An IndexNow übermitteln ---
-
-        return $this->sendToIndexNow($endpoint, $host, $apiKey, $urls);
+        return null;
     }
 
     /**
@@ -659,8 +697,6 @@ HTML;
      */
     private function interpretIndexNowResponse(int $status, int $urlCount, string $host, string $apiKey): string {
 
-        $keyFileUrl = 'https://' . $host . '/' . $apiKey . '.txt';
-
         switch ($status) {
             case 200:
                 return "✓ Erfolgreich: {$urlCount} URL(s) an IndexNow übermittelt.\nHTTP-Status: 200 OK";
@@ -675,6 +711,7 @@ HTML;
                      . "Bitte API-Key und URL-Format prüfen.";
 
             case 403:
+                $keyFileUrl = 'https://' . $host . '/' . $apiKey . '.txt';
                 return "Fehler: Zugriff verweigert (403 Forbidden).\n"
                      . "Key-Datei muss erreichbar sein unter: {$keyFileUrl}\n"
                      . "Inhalt der Datei muss exakt der API-Key sein: {$apiKey}";

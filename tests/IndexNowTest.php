@@ -544,6 +544,95 @@ class IndexNowTest extends TestCase {
     }
 
     // -----------------------------------------------------------------------
+    // validateSettings
+    // -----------------------------------------------------------------------
+
+    #[Test]
+    public function validateSettings_alleGueltig_gibtNullZurueck(): void {
+        $result = $this->call('validateSettings',
+            'abc12345', 'www.example.com',
+            'https://www.example.com/sitemap.xml',
+            'https://api.indexnow.org/indexnow'
+        );
+        $this->assertNull($result);
+    }
+
+    #[Test]
+    public function validateSettings_apiKeyLeer_fehlermeldung(): void {
+        $result = $this->call('validateSettings', '', 'www.example.com',
+            'https://www.example.com/sitemap.xml', 'https://api.indexnow.org/indexnow');
+        $this->assertStringContainsString('API-Key', $result);
+    }
+
+    #[Test]
+    public function validateSettings_apiKeyUngueltig_fehlermeldung(): void {
+        $result = $this->call('validateSettings', 'kurz', 'www.example.com',
+            'https://www.example.com/sitemap.xml', 'https://api.indexnow.org/indexnow');
+        $this->assertStringContainsString('Fehler', $result);
+    }
+
+    #[Test]
+    public function validateSettings_hostLeer_fehlermeldung(): void {
+        $result = $this->call('validateSettings', 'abc12345', '',
+            'https://www.example.com/sitemap.xml', 'https://api.indexnow.org/indexnow');
+        $this->assertStringContainsString('Host', $result);
+    }
+
+    #[Test]
+    public function validateSettings_sitemapLeer_fehlermeldung(): void {
+        $result = $this->call('validateSettings', 'abc12345', 'www.example.com',
+            '', 'https://api.indexnow.org/indexnow');
+        $this->assertStringContainsString('Sitemap', $result);
+    }
+
+    #[Test]
+    public function validateSettings_endpunktUngueltig_fehlermeldung(): void {
+        $result = $this->call('validateSettings', 'abc12345', 'www.example.com',
+            'https://www.example.com/sitemap.xml', 'kein-url');
+        $this->assertStringContainsString('Endpunkt', $result);
+    }
+
+    // -----------------------------------------------------------------------
+    // buildKeyFileHint
+    // -----------------------------------------------------------------------
+
+    #[Test]
+    public function buildKeyFileHint_apiKeyUndHostGesetzt_gibtHintZurueck(): void {
+        $result = $this->call('buildKeyFileHint', 'abc123', 'www.example.com');
+        $this->assertStringContainsString('www.example.com/abc123.txt', $result);
+        $this->assertStringContainsString('in-hint', $result);
+    }
+
+    #[Test]
+    public function buildKeyFileHint_apiKeyLeer_gibtLeerStringZurueck(): void {
+        $result = $this->call('buildKeyFileHint', '', 'www.example.com');
+        $this->assertSame('', $result);
+    }
+
+    #[Test]
+    public function buildKeyFileHint_hostLeer_gibtLeerStringZurueck(): void {
+        $result = $this->call('buildKeyFileHint', 'abc123', '');
+        $this->assertSame('', $result);
+    }
+
+    // -----------------------------------------------------------------------
+    // getValueSource
+    // -----------------------------------------------------------------------
+
+    #[Test]
+    public function getValueSource_leereSetting_gibtFallbackZurueck(): void {
+        $result = $this->call('getValueSource', 'host', 'auto-erkannt');
+        $this->assertSame('auto-erkannt', $result);
+    }
+
+    #[Test]
+    public function getValueSource_konfigurierterWert_gibtKonfiguriert(): void {
+        $this->setSetting('host', 'www.example.com');
+        $result = $this->call('getValueSource', 'host', 'auto-erkannt');
+        $this->assertSame('konfiguriert', $result);
+    }
+
+    // -----------------------------------------------------------------------
     // VERSION und DEFAULT_ENDPOINT Konstanten
     // -----------------------------------------------------------------------
 
