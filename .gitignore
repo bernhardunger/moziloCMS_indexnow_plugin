@@ -1,0 +1,11 @@
+# moziloCMS Laufzeitdateien
+*.log
+plugin.conf.php
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
