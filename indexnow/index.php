@@ -40,10 +40,6 @@ class indexnow extends Plugin {
     // -----------------------------------------------------------------------
 
     function getContent($value) {
-        return '';
-    }
-
-    function getContent($value) {
         // Wird aufgerufen via {PLUGIN(indexnow|admin_panel)} im Seiteninhalt
         // sowie via ?pluginadmin=indexnow aus dem CMS-Backend (--admin~~ Mechanismus).
         if ($value === 'admin_panel' || $value === '') {
