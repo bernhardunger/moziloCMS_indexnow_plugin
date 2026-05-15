@@ -47,15 +47,9 @@ Companion-Plugin zu [_seo_urls](https://github.com/bernhardunger/moziloCMS_seo_p
 
 ### 1. API-Key generieren
 
-Den API-Key am einfachsten über das offizielle Bing-Tool generieren – es erstellt den Key und die fertige Key-Datei zum Download:
+Den API-Key über das offizielle Bing-Tool generieren – es erstellt den Key und die fertige Key-Datei zum Download:
 
 **→ [https://www.bing.com/indexnow/getstarted](https://www.bing.com/indexnow/getstarted)**
-
-Alternativ lässt sich ein beliebiger alphanumerischer String (8–128 Zeichen) selbst generieren, z.B.:
-
-```
-a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4
-```
 
 ### 2. Key-Datei in den Webroot legen
 
