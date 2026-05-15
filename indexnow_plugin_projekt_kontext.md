@@ -57,8 +57,15 @@ sendToIndexNow(...)          // HTTP POST, Statuscode auswerten
 parseHttpStatus($headers)    // HTTP-Statuscode aus $http_response_header
 interpretIndexNowResponse()  // Statuscode → menschenlesbare Meldung
 
-// Admin-Panel
-renderAdminPanel()           // HTML-Panel mit Config-Tabelle, Warnungen, Submit
+// Admin-Panel (Orchestrierung)
+renderAdminPanel()           // POST-Handling + Orchestrierung, kein HTML
+buildPanelHtml(...)          // Reines HTML-Template, keine Logik
+
+// Admin-Panel (Teilblöcke)
+getAdminStyles()             // CSS-Block
+buildWarnings()              // Debug-Banner + Warnungen + Key-Datei-Hinweis
+buildConfigTable()           // Host/Sitemap/Endpunkt-Tabelle mit Herkunftshinweis
+buildResultHtml()            // Ergebnis-Block nach Submit (success | error)
 renderNotice($type, $msg)    // warning | success | error | debug Block
 
 // Sicherheit
@@ -132,3 +139,6 @@ ohne Übermittlung an IndexNow. Auf Produktion beide Felder leer lassen.
 - CSRF-Schutz (One-Time-Token)
 - `getDefaultSettings()` für Endpoint-Vorbelegung bei Erstinstallation
 - Host-Validierung mit Pfad-Stripping via `parse_url`
+- Refactoring: `renderAdminPanel()` in `buildPanelHtml()`, `getAdminStyles()`,
+  `buildWarnings()`, `buildConfigTable()`, `buildResultHtml()` aufgeteilt
+- PHPUnit 12 Testsuite (46 Tests)
