@@ -112,7 +112,7 @@ automatisch korrekt übermittelt.</p>
 
         return array(
             '<b>indexnow</b> ' . self::VERSION,
-            '3.0',
+            '2.0 / 3.0',
             $description,
             '',
             '',
