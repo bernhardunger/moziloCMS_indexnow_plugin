@@ -144,7 +144,7 @@ automatisch korrekt übermittelt.</p>
     private function getEffectiveHost(): string {
         $configured = $this->getSetting('host');
         if ($configured !== '') {
-            // Pfad-Anteile entfernen falls jemand z.B. "localhost/stb-hader" einträgt.
+            // Pfad-Anteile entfernen falls jemand z.B. "localhost/mein-pfad" einträgt.
             // parse_url gibt bei reinen Hostnamen ohne Schema keinen 'host'-Key zurück,
             // daher Schema voranstellen und anschließend wieder entfernen.
             $parsed = parse_url('http://' . $configured);
@@ -259,7 +259,7 @@ automatisch korrekt übermittelt.</p>
         $keyFileHint = '';
         if ($apiKey !== '' && $host !== '') {
             $keyFileUrl  = 'https://' . htmlspecialchars($host,   ENT_QUOTES, 'UTF-8')
-                         . '/'        . htmlspecialchars($apiKey, ENT_QUOTES, 'UTF-8') . '.txt';
+                . '/'        . htmlspecialchars($apiKey, ENT_QUOTES, 'UTF-8') . '.txt';
             $keyFileHint = '<p class="in-hint">🔑 Key-Datei muss erreichbar sein unter: <code>' . $keyFileUrl . '</code></p>';
         }
 
@@ -270,8 +270,8 @@ automatisch korrekt übermittelt.</p>
             $resultHtml = $this->renderNotice(
                 $isError ? 'error' : 'success',
                 '<pre style="margin:0;white-space:pre-wrap;font-family:monospace;font-size:.82rem">'
-                . htmlspecialchars($submitResult, ENT_QUOTES, 'UTF-8')
-                . '</pre>'
+                    . htmlspecialchars($submitResult, ENT_QUOTES, 'UTF-8')
+                    . '</pre>'
             );
         }
 
@@ -377,7 +377,7 @@ HTML;
         }
         if (!preg_match('/^[a-zA-Z0-9.\-]+(:\d+)?$/', $host)) {
             return 'Fehler: Host ist ungültig (ermittelter Wert: "' . $host . '").'
-                 . "\n" . 'Bitte den Hostnamen manuell in den Plugin-Einstellungen eintragen.';
+                . "\n" . 'Bitte den Hostnamen manuell in den Plugin-Einstellungen eintragen.';
         }
         if ($sitemapUrl === '') {
             return 'Fehler: Sitemap-URL nicht ermittelbar.';
@@ -617,29 +617,29 @@ HTML;
 
             case 202:
                 return "✓ Akzeptiert: {$urlCount} URL(s) wurden zur Verarbeitung entgegengenommen.\n"
-                     . "HTTP-Status: 202 Accepted\n"
-                     . "(Verarbeitung erfolgt asynchron durch die Suchmaschine.)";
+                    . "HTTP-Status: 202 Accepted\n"
+                    . "(Verarbeitung erfolgt asynchron durch die Suchmaschine.)";
 
             case 400:
                 return "Fehler: Ungültige Anfrage (400 Bad Request).\n"
-                     . "Bitte API-Key und URL-Format prüfen.";
+                    . "Bitte API-Key und URL-Format prüfen.";
 
             case 403:
                 return "Fehler: Zugriff verweigert (403 Forbidden).\n"
-                     . "Key-Datei muss erreichbar sein unter: {$keyFileUrl}\n"
-                     . "Inhalt der Datei muss exakt der API-Key sein: {$apiKey}";
+                    . "Key-Datei muss erreichbar sein unter: {$keyFileUrl}\n"
+                    . "Inhalt der Datei muss exakt der API-Key sein: {$apiKey}";
 
             case 422:
                 return "Fehler: Ungültige URL(s) in der Übermittlung (422 Unprocessable Entity).\n"
-                     . "Alle URLs müssen zum konfigurierten Host '{$host}' gehören.";
+                    . "Alle URLs müssen zum konfigurierten Host '{$host}' gehören.";
 
             case 429:
                 return "Fehler: Anfrage-Limit überschritten (429 Too Many Requests).\n"
-                     . "Bitte später erneut versuchen.";
+                    . "Bitte später erneut versuchen.";
 
             case 0:
                 return "Fehler: Keine Antwort vom IndexNow-Endpunkt erhalten.\n"
-                     . "Bitte Internetverbindung und Endpunkt-URL prüfen.";
+                    . "Bitte Internetverbindung und Endpunkt-URL prüfen.";
 
             default:
                 return "Fehler: Unerwarteter HTTP-Status {$status} vom IndexNow-Endpunkt.";
