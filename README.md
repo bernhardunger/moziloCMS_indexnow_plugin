@@ -32,7 +32,7 @@ Companion-Plugin zu [_seo_urls](https://github.com/bernhardunger/moziloCMS_seo_p
 
 ## Installation
 
-1. Ordner `indexnow/` in das `plugins/`-Verzeichnis des CMS hochladen
+1. ZIP Datei herunterladen und Plugin über Plugin-Admin intallieren, oder manuell: Ordner `indexnow/` in das `plugins/`-Verzeichnis des CMS hochladen
 2. Plugin im moziloCMS-Backend aktivieren
 3. API-Key konfigurieren (siehe Einrichtung)
 4. Admin-Panel direkt über den Button in der Plugin-Konfiguration aufrufen
