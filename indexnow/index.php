@@ -92,17 +92,17 @@ Yandex und weitere unterstützte Suchmaschinen.</p>
   <tr><td><b>Auto-Detect Host</b></td><td>Hostname wird automatisch aus HTTP_HOST ermittelt wenn nicht konfiguriert</td></tr>
   <tr><td><b>Auto-Detect Sitemap</b></td><td>Sitemap-URL wird aus dem Host abgeleitet wenn nicht konfiguriert</td></tr>
   <tr><td><b>IndexNow POST</b></td><td>Alle URLs in einer einzigen Anfrage übermittelt</td></tr>
-  <tr><td><b>Admin-Panel</b></td><td>Manuelles Auslösen per Klick – via <code>{PLUGIN(indexnow|admin_panel)}</code></td></tr>
+  <tr><td><b>Admin-Panel</b></td><td>Submit-Button auf einer CMS-Seite einbettbar via <code>{PLUGIN(indexnow|admin_panel)}</code></td></tr>
   <tr><td><b>Status-Feedback</b></td><td>HTTP-Statuscode und Ergebnismeldung direkt im Panel</td></tr>
-  <tr><td><b>Debug-Modus</b></td><td>URL-Liste und JSON-Payload im Browser – kein echter API-Call</td></tr>
+  <tr><td><b>Debug-Modus</b></td><td>Checkbox in den Plugin-Einstellungen aktivieren → Submit-Button zeigt URL-Liste und JSON-Payload, sendet nichts an IndexNow</td></tr>
 </table>
 
 <h4>Einrichtung</h4>
 <ol>
-  <li>API-Key generieren (beliebige alphanumerische Zeichenkette, mind. 8 Zeichen)</li>
-  <li>Datei <code>{key}.txt</code> mit dem Key als einzigem Inhalt in den Webroot legen</li>
-  <li>Nur den API-Key konfigurieren – Host und Sitemap-URL werden automatisch erkannt</li>
-  <li>Admin-Panel via <code>{PLUGIN(indexnow|admin_panel)}</code> einbinden</li>
+  <li>API-Key generieren unter <a href="https://www.bing.com/indexnow/getstarted" target="_blank">bing.com/indexnow/getstarted</a> – das Tool erstellt Key und Key-Datei fertig zum Download</li>
+  <li>Key-Datei <code>{key}.txt</code> in den Webroot hochladen</li>
+  <li>Nur den API-Key im Plugin konfigurieren – Host und Sitemap-URL werden automatisch erkannt</li>
+  <li>Admin-Panel auf einer passwortgeschützten CMS-Seite einbinden: <code>{PLUGIN(indexnow|admin_panel)}</code></li>
 </ol>
 
 <h4>Companion-Plugin</h4>
