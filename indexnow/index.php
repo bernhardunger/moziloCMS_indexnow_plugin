@@ -144,7 +144,7 @@ automatisch korrekt übermittelt.</p>
     private function getEffectiveHost(): string {
         $configured = $this->getSetting('host');
         if ($configured !== '') {
-            // Pfad-Anteile entfernen falls jemand z.B. "localhost/mein-pfad" einträgt.
+            // Pfad-Anteile entfernen falls jemand z.B. "localhost/stb-hader" einträgt.
             // parse_url gibt bei reinen Hostnamen ohne Schema keinen 'host'-Key zurück,
             // daher Schema voranstellen und anschließend wieder entfernen.
             $parsed = parse_url('http://' . $configured);
@@ -202,8 +202,7 @@ automatisch korrekt übermittelt.</p>
     // -----------------------------------------------------------------------
 
     /**
-     * Rendert das Admin-Panel mit Konfigurationshinweisen, Statusausgabe
-     * und dem Submit-Button zur manuellen URL-Übermittlung.
+     * Rendert das Admin-Panel – orchestriert Datenermittlung, Teilblöcke und HTML-Gerüst.
      */
     private function renderAdminPanel(): string {
 
@@ -220,68 +219,68 @@ automatisch korrekt übermittelt.</p>
             $submitResult = $this->runSubmission();
         }
 
-        // Effektive Werte für Anzeige im Panel ermitteln
-        $apiKey     = $this->getSetting('api_key');
-        $host       = $this->getEffectiveHost();
-        $sitemapUrl = $this->getEffectiveSitemapUrl();
-        $endpoint   = $this->getEffectiveEndpoint();
-        $version    = self::VERSION;
+        $apiKey    = $this->getSetting('api_key');
+        $host      = $this->getEffectiveHost();
+        $sitemap   = $this->getEffectiveSitemapUrl();
+        $version   = self::VERSION;
+        $csrfToken = $this->generateCsrfToken();
 
-        $csrfToken  = $this->generateCsrfToken();
-
-        // Herkunftshinweis für jeden Wert (konfiguriert vs. automatisch ermittelt)
-        $hostSource     = ($this->getSetting('host') !== '')       ? 'konfiguriert' : 'auto-erkannt';
-        $sitemapSource  = ($this->getSetting('sitemap_url') !== '') ? 'konfiguriert'  : 'abgeleitet';
-        $endpointSource = ($this->getSetting('endpoint') !== '')    ? 'konfiguriert'  : 'Standard';
-
-        $hostEsc     = htmlspecialchars($host,       ENT_QUOTES, 'UTF-8');
-        $sitemapEsc  = htmlspecialchars($sitemapUrl, ENT_QUOTES, 'UTF-8');
-        $endpointEsc = htmlspecialchars($endpoint,   ENT_QUOTES, 'UTF-8');
-
-        // Warnungen bei fehlender oder nicht ermittelbarer Konfiguration
-        $warnings = '';
-        if ($apiKey === '') {
-            $warnings .= $this->renderNotice('warning', '⚠ API-Key ist nicht konfiguriert.');
-        }
-        if ($host === '') {
-            $warnings .= $this->renderNotice('warning', '⚠ Host konnte nicht ermittelt werden. Bitte manuell konfigurieren.');
-        }
-        if ($sitemapUrl === '') {
-            $warnings .= $this->renderNotice('warning', '⚠ Sitemap-URL konnte nicht abgeleitet werden.');
-        }
-
-        // Debug-Modus-Banner
-        $debugBanner = $isDebug
-            ? $this->renderNotice('debug', '🔍 Debug-Modus aktiv – es wird nichts an IndexNow gesendet.')
-            : '';
-
-        // Hinweis zur Key-Datei
-        $keyFileHint = '';
-        if ($apiKey !== '' && $host !== '') {
-            $keyFileUrl  = 'https://' . htmlspecialchars($host,   ENT_QUOTES, 'UTF-8')
-                . '/'        . htmlspecialchars($apiKey, ENT_QUOTES, 'UTF-8') . '.txt';
-            $keyFileHint = '<p class="in-hint">🔑 Key-Datei muss erreichbar sein unter: <code>' . $keyFileUrl . '</code></p>';
-        }
-
-        // Ergebnis-Block nach Submit
-        $resultHtml = '';
-        if ($submitResult !== '') {
-            $isError    = stripos($submitResult, 'fehler') !== false;
-            $resultHtml = $this->renderNotice(
-                $isError ? 'error' : 'success',
-                '<pre style="margin:0;white-space:pre-wrap;font-family:monospace;font-size:.82rem">'
-                    . htmlspecialchars($submitResult, ENT_QUOTES, 'UTF-8')
-                    . '</pre>'
-            );
-        }
-
-        // Button deaktivieren wenn Konfiguration unvollständig
-        $disabled    = ($apiKey === '' || $host === '' || $sitemapUrl === '') ? ' disabled' : '';
+        $disabled    = ($apiKey === '' || $host === '' || $sitemap === '') ? ' disabled' : '';
         $buttonTitle = $disabled ? ' title="Bitte zuerst alle Einstellungen konfigurieren."' : '';
         $buttonClass = $isDebug ? 'in-btn in-btn-debug' : 'in-btn';
         $buttonLabel = $isDebug ? '🔍 Debug: URLs anzeigen (kein API-Call)' : 'Alle URLs jetzt übermitteln';
 
+        $styles      = $this->getAdminStyles();
+        $warnings    = $this->buildWarnings($apiKey, $host, $sitemap, $isDebug);
+        $configTable = $this->buildConfigTable($host, $sitemap, $this->getEffectiveEndpoint());
+        $resultHtml  = $this->buildResultHtml($submitResult);
+
+        return $this->buildPanelHtml(
+            $styles, $warnings, $configTable, $resultHtml,
+            $csrfToken, $buttonClass, $buttonLabel, $disabled, $buttonTitle, $version
+        );
+    }
+
+    /**
+     * Setzt alle vorbereiteten Blöcke zum fertigen Admin-Panel-HTML zusammen.
+     */
+    private function buildPanelHtml(
+        string $styles,
+        string $warnings,
+        string $configTable,
+        string $resultHtml,
+        string $csrfToken,
+        string $buttonClass,
+        string $buttonLabel,
+        string $disabled,
+        string $buttonTitle,
+        string $version
+    ): string {
         return <<<HTML
+{$styles}
+<div class="in-panel">
+  <h3>IndexNow – URL-Übermittlung</h3>
+
+  {$warnings}
+  {$configTable}
+  {$resultHtml}
+
+  <form method="post" action="">
+    <input type="hidden" name="indexnow_submit" value="1">
+    <input type="hidden" name="indexnow_csrf"   value="{$csrfToken}">
+    <button class="{$buttonClass}" type="submit"{$disabled}{$buttonTitle}>{$buttonLabel}</button>
+  </form>
+
+  <p class="in-meta">indexnow {$version}</p>
+</div>
+HTML;
+    }
+
+    /**
+     * Gibt den CSS-Block für das Admin-Panel zurück.
+     */
+    private function getAdminStyles(): string {
+        return <<<CSS
 <style>
 .in-panel            { font-family: Arial, sans-serif; max-width: 680px; margin: 1rem 0; padding: 1.25rem; border: 1px solid #d0d0d0; border-radius: 6px; background: #fafafa; }
 .in-panel h3         { margin: 0 0 1rem; font-size: 1.1rem; }
@@ -304,41 +303,93 @@ automatisch korrekt übermittelt.</p>
 .in-btn-debug        { background: #6c757d; }
 .in-btn-debug:hover:not([disabled]) { background: #5a6268; }
 </style>
-<div class="in-panel">
-  <h3>IndexNow – URL-Übermittlung</h3>
+CSS;
+    }
 
-  {$debugBanner}
-  {$warnings}
+    /**
+     * Baut den Debug-Banner, Konfigurationswarnungen und den Key-Datei-Hinweis zusammen.
+     */
+    private function buildWarnings(
+        string $apiKey,
+        string $host,
+        string $sitemapUrl,
+        bool   $isDebug
+    ): string {
 
-  <div class="in-config">
-    <table>
-      <tr>
-        <td>Host:</td>
-        <td>{$hostEsc} <span class="in-src">({$hostSource})</span></td>
-      </tr>
-      <tr>
-        <td>Sitemap:</td>
-        <td>{$sitemapEsc} <span class="in-src">({$sitemapSource})</span></td>
-      </tr>
-      <tr>
-        <td>Endpunkt:</td>
-        <td>{$endpointEsc} <span class="in-src">({$endpointSource})</span></td>
-      </tr>
-    </table>
-  </div>
+        $output = '';
 
-  {$keyFileHint}
-  {$resultHtml}
+        if ($isDebug) {
+            $output .= $this->renderNotice('debug', '🔍 Debug-Modus aktiv – es wird nichts an IndexNow gesendet.');
+        }
+        if ($apiKey === '') {
+            $output .= $this->renderNotice('warning', '⚠ API-Key ist nicht konfiguriert.');
+        }
+        if ($host === '') {
+            $output .= $this->renderNotice('warning', '⚠ Host konnte nicht ermittelt werden. Bitte manuell konfigurieren.');
+        }
+        if ($sitemapUrl === '') {
+            $output .= $this->renderNotice('warning', '⚠ Sitemap-URL konnte nicht abgeleitet werden.');
+        }
+        if ($apiKey !== '' && $host !== '') {
+            $keyFileUrl = 'https://' . htmlspecialchars($host,   ENT_QUOTES, 'UTF-8')
+                        . '/'        . htmlspecialchars($apiKey, ENT_QUOTES, 'UTF-8') . '.txt';
+            $output .= '<p class="in-hint">🔑 Key-Datei muss erreichbar sein unter: <code>' . $keyFileUrl . '</code></p>';
+        }
 
-  <form method="post" action="">
-    <input type="hidden" name="indexnow_submit" value="1">
-    <input type="hidden" name="indexnow_csrf"   value="{$csrfToken}">
-    <button class="{$buttonClass}" type="submit"{$disabled}{$buttonTitle}>{$buttonLabel}</button>
-  </form>
+        return $output;
+    }
 
-  <p class="in-meta">indexnow {$version}</p>
+    /**
+     * Baut die Konfigurationstabelle mit effektiven Werten und Herkunftshinweisen.
+     */
+    private function buildConfigTable(string $host, string $sitemapUrl, string $endpoint): string {
+
+        $hostSource     = ($this->getSetting('host') !== '')       ? 'konfiguriert' : 'auto-erkannt';
+        $sitemapSource  = ($this->getSetting('sitemap_url') !== '') ? 'konfiguriert'  : 'abgeleitet';
+        $endpointSource = ($this->getSetting('endpoint') !== '')    ? 'konfiguriert'  : 'Standard';
+
+        $hostEsc     = htmlspecialchars($host,       ENT_QUOTES, 'UTF-8');
+        $sitemapEsc  = htmlspecialchars($sitemapUrl, ENT_QUOTES, 'UTF-8');
+        $endpointEsc = htmlspecialchars($endpoint,   ENT_QUOTES, 'UTF-8');
+
+        return <<<HTML
+<div class="in-config">
+  <table>
+    <tr>
+      <td>Host:</td>
+      <td>{$hostEsc} <span class="in-src">({$hostSource})</span></td>
+    </tr>
+    <tr>
+      <td>Sitemap:</td>
+      <td>{$sitemapEsc} <span class="in-src">({$sitemapSource})</span></td>
+    </tr>
+    <tr>
+      <td>Endpunkt:</td>
+      <td>{$endpointEsc} <span class="in-src">({$endpointSource})</span></td>
+    </tr>
+  </table>
 </div>
 HTML;
+    }
+
+    /**
+     * Baut den Ergebnis-Block nach einem Submit (success oder error Notice).
+     * Gibt einen leeren String zurück wenn kein Submit-Ergebnis vorliegt.
+     */
+    private function buildResultHtml(string $submitResult): string {
+
+        if ($submitResult === '') {
+            return '';
+        }
+
+        $isError = stripos($submitResult, 'fehler') !== false;
+
+        return $this->renderNotice(
+            $isError ? 'error' : 'success',
+            '<pre style="margin:0;white-space:pre-wrap;font-family:monospace;font-size:.82rem">'
+            . htmlspecialchars($submitResult, ENT_QUOTES, 'UTF-8')
+            . '</pre>'
+        );
     }
 
     /**
@@ -377,7 +428,7 @@ HTML;
         }
         if (!preg_match('/^[a-zA-Z0-9.\-]+(:\d+)?$/', $host)) {
             return 'Fehler: Host ist ungültig (ermittelter Wert: "' . $host . '").'
-                . "\n" . 'Bitte den Hostnamen manuell in den Plugin-Einstellungen eintragen.';
+                 . "\n" . 'Bitte den Hostnamen manuell in den Plugin-Einstellungen eintragen.';
         }
         if ($sitemapUrl === '') {
             return 'Fehler: Sitemap-URL nicht ermittelbar.';
@@ -431,18 +482,10 @@ HTML;
         array  $urls
     ): string {
 
-        $keyLocation = 'https://' . $host . '/' . $apiKey . '.txt';
+        $payload     = $this->buildPayload($host, $apiKey, $urls);
+        $keyLocation = $payload['keyLocation'];
         $urlCount    = count($urls);
-
-        $payload = json_encode(
-            array(
-                'host'        => $host,
-                'key'         => $apiKey,
-                'keyLocation' => $keyLocation,
-                'urlList'     => $urls,
-            ),
-            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT
-        );
+        $payloadJson = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
         return implode("\n", array(
             '=== IndexNow Debug-Ausgabe (' . self::VERSION . ') ===',
@@ -457,7 +500,7 @@ HTML;
             implode("\n", $urls),
             '',
             '--- JSON-Payload (würde an IndexNow gesendet) ---',
-            $payload,
+            $payloadJson,
         ));
     }
 
@@ -548,20 +591,13 @@ HTML;
         array  $urls
     ): string {
 
-        $keyLocation = 'https://' . $host . '/' . $apiKey . '.txt';
         $urlCount    = count($urls);
-
-        $payload = json_encode(
-            array(
-                'host'        => $host,
-                'key'         => $apiKey,
-                'keyLocation' => $keyLocation,
-                'urlList'     => $urls,
-            ),
+        $payloadJson = json_encode(
+            $this->buildPayload($host, $apiKey, $urls),
             JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT
         );
 
-        if ($payload === false) {
+        if ($payloadJson === false) {
             return 'Fehler: URL-Liste konnte nicht als JSON kodiert werden.';
         }
 
@@ -570,10 +606,10 @@ HTML;
                 'method'        => 'POST',
                 'header'        => implode("\r\n", array(
                     'Content-Type: application/json; charset=utf-8',
-                    'Content-Length: ' . strlen($payload),
+                    'Content-Length: ' . strlen($payloadJson),
                     'User-Agent: moziloCMS-IndexNow/' . self::VERSION,
                 )),
-                'content'       => $payload,
+                'content'       => $payloadJson,
                 'timeout'       => 20,
                 'ignore_errors' => true,
             ),
@@ -588,6 +624,20 @@ HTML;
         $statusCode = $this->parseHttpStatus($http_response_header ?? array());
 
         return $this->interpretIndexNowResponse($statusCode, $urlCount, $host, $apiKey);
+    }
+
+    /**
+     * Baut das IndexNow-Payload-Array aus Host, API-Key und URL-Liste zusammen.
+     * Einzige Pflegestelle für die Payload-Struktur – genutzt von
+     * sendToIndexNow() und buildDebugOutput().
+     */
+    private function buildPayload(string $host, string $apiKey, array $urls): array {
+        return array(
+            'host'        => $host,
+            'key'         => $apiKey,
+            'keyLocation' => 'https://' . $host . '/' . $apiKey . '.txt',
+            'urlList'     => $urls,
+        );
     }
 
     /**
@@ -617,29 +667,29 @@ HTML;
 
             case 202:
                 return "✓ Akzeptiert: {$urlCount} URL(s) wurden zur Verarbeitung entgegengenommen.\n"
-                    . "HTTP-Status: 202 Accepted\n"
-                    . "(Verarbeitung erfolgt asynchron durch die Suchmaschine.)";
+                     . "HTTP-Status: 202 Accepted\n"
+                     . "(Verarbeitung erfolgt asynchron durch die Suchmaschine.)";
 
             case 400:
                 return "Fehler: Ungültige Anfrage (400 Bad Request).\n"
-                    . "Bitte API-Key und URL-Format prüfen.";
+                     . "Bitte API-Key und URL-Format prüfen.";
 
             case 403:
                 return "Fehler: Zugriff verweigert (403 Forbidden).\n"
-                    . "Key-Datei muss erreichbar sein unter: {$keyFileUrl}\n"
-                    . "Inhalt der Datei muss exakt der API-Key sein: {$apiKey}";
+                     . "Key-Datei muss erreichbar sein unter: {$keyFileUrl}\n"
+                     . "Inhalt der Datei muss exakt der API-Key sein: {$apiKey}";
 
             case 422:
                 return "Fehler: Ungültige URL(s) in der Übermittlung (422 Unprocessable Entity).\n"
-                    . "Alle URLs müssen zum konfigurierten Host '{$host}' gehören.";
+                     . "Alle URLs müssen zum konfigurierten Host '{$host}' gehören.";
 
             case 429:
                 return "Fehler: Anfrage-Limit überschritten (429 Too Many Requests).\n"
-                    . "Bitte später erneut versuchen.";
+                     . "Bitte später erneut versuchen.";
 
             case 0:
                 return "Fehler: Keine Antwort vom IndexNow-Endpunkt erhalten.\n"
-                    . "Bitte Internetverbindung und Endpunkt-URL prüfen.";
+                     . "Bitte Internetverbindung und Endpunkt-URL prüfen.";
 
             default:
                 return "Fehler: Unerwarteter HTTP-Status {$status} vom IndexNow-Endpunkt.";
@@ -651,12 +701,19 @@ HTML;
     // -----------------------------------------------------------------------
 
     /**
-     * Erzeugt einen kryptografisch sicheren CSRF-Token und speichert ihn in der Session.
+     * Stellt sicher dass eine Session gestartet ist.
      */
-    private function generateCsrfToken(): string {
+    private function ensureSession(): void {
         if (session_status() === PHP_SESSION_NONE) {
             @session_start();
         }
+    }
+
+    /**
+     * Erzeugt einen kryptografisch sicheren CSRF-Token und speichert ihn in der Session.
+     */
+    private function generateCsrfToken(): string {
+        $this->ensureSession();
         $token = bin2hex(random_bytes(16));
         $_SESSION['indexnow_csrf_token'] = $token;
         return $token;
@@ -667,9 +724,7 @@ HTML;
      * Macht den Token nach einmaliger Verwendung ungültig (One-Time-Token).
      */
     private function validateCsrfToken(): bool {
-        if (session_status() === PHP_SESSION_NONE) {
-            @session_start();
-        }
+        $this->ensureSession();
         $submitted = isset($_POST['indexnow_csrf']) ? (string) $_POST['indexnow_csrf'] : '';
         $stored    = isset($_SESSION['indexnow_csrf_token']) ? (string) $_SESSION['indexnow_csrf_token'] : '';
 

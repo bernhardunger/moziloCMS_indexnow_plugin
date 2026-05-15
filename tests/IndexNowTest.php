@@ -419,6 +419,131 @@ class IndexNowTest extends TestCase {
     }
 
     // -----------------------------------------------------------------------
+    // buildPayload
+    // -----------------------------------------------------------------------
+
+    #[Test]
+    public function buildPayload_gibtKorrekteStrukturZurueck(): void {
+        $urls   = ['https://www.example.com/', 'https://www.example.com/kontakt/'];
+        $result = $this->call('buildPayload', 'www.example.com', 'abc123', $urls);
+
+        $this->assertSame('www.example.com',                      $result['host']);
+        $this->assertSame('abc123',                               $result['key']);
+        $this->assertSame('https://www.example.com/abc123.txt',   $result['keyLocation']);
+        $this->assertSame($urls,                                  $result['urlList']);
+    }
+
+    #[Test]
+    public function buildPayload_keyLocationAusHostUndKeyKombiniert(): void {
+        $result = $this->call('buildPayload', 'www.example.com', 'meinkey123', []);
+        $this->assertSame('https://www.example.com/meinkey123.txt', $result['keyLocation']);
+    }
+
+    // -----------------------------------------------------------------------
+    // buildWarnings
+    // -----------------------------------------------------------------------
+
+    #[Test]
+    public function buildWarnings_allesFehlt_zeigtDreiWarnungen(): void {
+        $result = $this->call('buildWarnings', '', '', '', false);
+        $this->assertStringContainsString('API-Key', $result);
+        $this->assertStringContainsString('Host', $result);
+        $this->assertStringContainsString('Sitemap', $result);
+    }
+
+    #[Test]
+    public function buildWarnings_alleKonfiguriert_keinWarnung(): void {
+        $result = $this->call('buildWarnings', 'abc123', 'www.example.com', 'https://www.example.com/sitemap.xml', false);
+        $this->assertStringNotContainsString('in-warning', $result);
+    }
+
+    #[Test]
+    public function buildWarnings_debugAktiv_zeigtDebugBanner(): void {
+        $result = $this->call('buildWarnings', 'abc123', 'www.example.com', 'https://www.example.com/sitemap.xml', true);
+        $this->assertStringContainsString('Debug-Modus', $result);
+        $this->assertStringContainsString('in-debug', $result);
+    }
+
+    #[Test]
+    public function buildWarnings_apiKeyUndHostGesetzt_zeigtKeyDateiHinweis(): void {
+        $result = $this->call('buildWarnings', 'abc123', 'www.example.com', 'https://www.example.com/sitemap.xml', false);
+        $this->assertStringContainsString('www.example.com/abc123.txt', $result);
+        $this->assertStringContainsString('in-hint', $result);
+    }
+
+    #[Test]
+    public function buildWarnings_nurApiKeyFehlt_nurApiKeyWarnung(): void {
+        $result = $this->call('buildWarnings', '', 'www.example.com', 'https://www.example.com/sitemap.xml', false);
+        $this->assertStringContainsString('API-Key', $result);
+        $this->assertStringNotContainsString('Host konnte', $result);
+        $this->assertStringNotContainsString('Sitemap-URL', $result);
+    }
+
+    // -----------------------------------------------------------------------
+    // buildConfigTable
+    // -----------------------------------------------------------------------
+
+    #[Test]
+    public function buildConfigTable_enthaeltAlleWerte(): void {
+        $result = $this->call('buildConfigTable', 'www.example.com', 'https://www.example.com/sitemap.xml', 'https://api.indexnow.org/indexnow');
+        $this->assertStringContainsString('www.example.com', $result);
+        $this->assertStringContainsString('https://www.example.com/sitemap.xml', $result);
+        $this->assertStringContainsString('https://api.indexnow.org/indexnow', $result);
+    }
+
+    #[Test]
+    public function buildConfigTable_leereSetting_zeigtAutoErkannt(): void {
+        $result = $this->call('buildConfigTable', 'www.example.com', 'https://www.example.com/sitemap.xml', 'https://api.indexnow.org/indexnow');
+        $this->assertStringContainsString('auto-erkannt', $result);
+        $this->assertStringContainsString('abgeleitet', $result);
+        $this->assertStringContainsString('Standard', $result);
+    }
+
+    #[Test]
+    public function buildConfigTable_konfigurierterHost_zeigtKonfiguriert(): void {
+        $this->setSetting('host', 'www.example.com');
+        $result = $this->call('buildConfigTable', 'www.example.com', 'https://www.example.com/sitemap.xml', 'https://api.indexnow.org/indexnow');
+        $this->assertStringContainsString('konfiguriert', $result);
+    }
+
+    #[Test]
+    public function buildConfigTable_sonderzeichenWerdenEscaped(): void {
+        $result = $this->call('buildConfigTable', 'www.example.com', 'https://www.example.com/sitemap.xml', 'https://api.indexnow.org/indexnow');
+        $this->assertStringNotContainsString('<script>', $result);
+    }
+
+    // -----------------------------------------------------------------------
+    // buildResultHtml
+    // -----------------------------------------------------------------------
+
+    #[Test]
+    public function buildResultHtml_leeresErgebnis_gibtLeerStringZurueck(): void {
+        $result = $this->call('buildResultHtml', '');
+        $this->assertSame('', $result);
+    }
+
+    #[Test]
+    public function buildResultHtml_erfolg_gibtSuccessNoticeZurueck(): void {
+        $result = $this->call('buildResultHtml', '✓ Erfolgreich: 18 URL(s) übermittelt.');
+        $this->assertStringContainsString('in-success', $result);
+        $this->assertStringNotContainsString('in-error', $result);
+    }
+
+    #[Test]
+    public function buildResultHtml_fehler_gibtErrorNoticeZurueck(): void {
+        $result = $this->call('buildResultHtml', 'Fehler: API-Key nicht konfiguriert.');
+        $this->assertStringContainsString('in-error', $result);
+        $this->assertStringNotContainsString('in-success', $result);
+    }
+
+    #[Test]
+    public function buildResultHtml_inhaltWirdEscaped(): void {
+        $result = $this->call('buildResultHtml', 'Fehler: <script>alert(1)</script>');
+        $this->assertStringNotContainsString('<script>', $result);
+        $this->assertStringContainsString('&lt;script&gt;', $result);
+    }
+
+    // -----------------------------------------------------------------------
     // VERSION und DEFAULT_ENDPOINT Konstanten
     // -----------------------------------------------------------------------
 
