@@ -8,13 +8,14 @@ if (!defined('IS_CMS')) die();
  * @license: GPL
  *
  * Übermittelt alle URLs der Sitemap via IndexNow API an Bing, Yandex u.a.
- * Liest die sitemap.xml per HTTP-Abruf, damit Slug-URLs des _seo_urls Plugins
- * korrekt übernommen werden.
+ * Liest die sitemap.xml per HTTP-Abruf. Wenn das _seo_urls Plugin vorhanden
+ * und aktiv ist, werden dessen Slug-URLs automatisch übernommen – andernfalls
+ * werden die in der Sitemap vorhandenen URLs verwendet.
  *
  * Voraussetzung: API-Key-Datei unter https://{host}/{key}.txt erreichbar.
  *
  * Funktionen:
- *  - Sitemap-Abruf per HTTP (Slug-URLs von _seo_urls werden übernommen)
+ *  - Sitemap-Abruf per HTTP (Slug-URLs von _seo_urls werden übernommen wenn aktiv)
  *  - Host automatisch aus HTTP_HOST ermittelt wenn Config-Feld leer
  *  - Sitemap-URL automatisch aus Host abgeleitet wenn Config-Feld leer
  *  - Endpoint konfigurierbar, Standard: https://api.indexnow.org/indexnow
@@ -32,13 +33,18 @@ class indexnow extends Plugin {
      */
     const DEFAULT_ENDPOINT = 'https://api.indexnow.org/indexnow';
 
+    /**
+     * URL zum Bing IndexNow Key-Generator.
+     * Einzige Pflegestelle falls sich die URL ändert.
+     */
+    const INDEXNOW_GETSTARTED_URL = 'https://www.bing.com/indexnow/getstarted';
+
     // -----------------------------------------------------------------------
     // Pflichtmethoden moziloCMS Plugin-API
     // -----------------------------------------------------------------------
 
     function getContent($value) {
-        // Wird aufgerufen via {PLUGIN(indexnow|admin_panel)} im Seiteninhalt
-        // sowie via ?pluginadmin=indexnow aus dem CMS-Backend (--admin~~ Mechanismus).
+        // Wird aufgerufen via ?pluginadmin=indexnow aus dem CMS-Backend (--admin~~ Mechanismus).
         if ($value === 'admin_panel' || $value === '') {
             return $this->renderAdminPanel();
         }
@@ -100,26 +106,26 @@ Yandex und weitere unterstützte Suchmaschinen.</p>
 
 <h4>Funktionen</h4>
 <table>
-  <tr><td><b>Sitemap-Abruf per HTTP</b></td><td>Slug-URLs des _seo_urls Plugins werden automatisch übernommen</td></tr>
+  <tr><td><b>Sitemap-Abruf per HTTP</b></td><td>Slug-URLs des _seo_urls Plugins werden automatisch übernommen, wenn es vorhanden und aktiv ist – sonst werden die vorhandenen Sitemap-URLs verwendet</td></tr>
   <tr><td><b>Auto-Detect Host</b></td><td>Hostname wird automatisch aus HTTP_HOST ermittelt wenn nicht konfiguriert</td></tr>
   <tr><td><b>Auto-Detect Sitemap</b></td><td>Sitemap-URL wird aus dem Host abgeleitet wenn nicht konfiguriert</td></tr>
   <tr><td><b>IndexNow POST</b></td><td>Alle URLs in einer einzigen Anfrage übermittelt</td></tr>
-  <tr><td><b>Admin-Panel</b></td><td>Submit-Button auf einer CMS-Seite einbettbar via <code>{PLUGIN(indexnow|admin_panel)}</code></td></tr>
+  <tr><td><b>Admin-Panel</b></td><td>Direkt über den Button „Admin-Panel öffnen" in der Plugin-Konfiguration erreichbar</td></tr>
   <tr><td><b>Status-Feedback</b></td><td>HTTP-Statuscode und Ergebnismeldung direkt im Panel</td></tr>
   <tr><td><b>Debug-Modus</b></td><td>Checkbox in den Plugin-Einstellungen aktivieren → Submit-Button zeigt URL-Liste und JSON-Payload, sendet nichts an IndexNow</td></tr>
 </table>
 
 <h4>Einrichtung</h4>
 <ol>
-  <li>API-Key generieren unter <a href="https://www.bing.com/indexnow/getstarted" target="_blank">bing.com/indexnow/getstarted</a> – das Tool erstellt Key und Key-Datei fertig zum Download</li>
+  <li>API-Key generieren unter <a href="' . self::INDEXNOW_GETSTARTED_URL . '" target="_blank">bing.com/indexnow/getstarted</a> – das Tool erstellt Key und Key-Datei fertig zum Download</li>
   <li>Key-Datei <code>{key}.txt</code> in den Webroot hochladen</li>
   <li>Nur den API-Key im Plugin konfigurieren – Host und Sitemap-URL werden automatisch erkannt</li>
-  <li>Admin-Panel auf einer passwortgeschützten CMS-Seite einbinden: <code>{PLUGIN(indexnow|admin_panel)}</code></li>
+  <li>Admin-Panel über den Button „Admin-Panel öffnen" in der Plugin-Konfiguration aufrufen</li>
 </ol>
 
 <h4>Companion-Plugin</h4>
-<p>Funktioniert zusammen mit <b>_seo_urls</b> – Slug-URLs werden via HTTP-Sitemap-Abruf
-automatisch korrekt übermittelt.</p>
+<p>Funktioniert zusammen mit <b>_seo_urls</b> – wenn vorhanden und aktiv, werden dessen
+Slug-URLs via HTTP-Sitemap-Abruf automatisch korrekt übermittelt.</p>
 ';
 
         return array(
@@ -144,7 +150,7 @@ automatisch korrekt übermittelt.</p>
     private function getEffectiveHost(): string {
         $configured = $this->getSetting('host');
         if ($configured !== '') {
-            // Pfad-Anteile entfernen falls jemand z.B. "localhost/stb-hader" einträgt.
+            // Pfad-Anteile entfernen falls jemand z.B. "localhost/mein-pfad" einträgt.
             // parse_url gibt bei reinen Hostnamen ohne Schema keinen 'host'-Key zurück,
             // daher Schema voranstellen und anschließend wieder entfernen.
             $parsed = parse_url('http://' . $configured);
