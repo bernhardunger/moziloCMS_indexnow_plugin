@@ -2,7 +2,7 @@
 
 Ein eigenständiges Plugin für **moziloCMS 3.0.x** zur automatisierten URL-Übermittlung an die [IndexNow API](https://www.indexnow.org/) (Bing, Yandex u.a.).
 
-Companion-Plugin zu [_seo_urls](https://github.com/bernhardunger/moziloCMS_seo_plugin) – Slug-URLs werden via HTTP-Sitemap-Abruf automatisch korrekt übermittelt.
+Companion-Plugin zu [_seo_urls](https://github.com/bernhardunger/moziloCMS_seo_plugin) – wenn vorhanden und aktiv, werden dessen Slug-URLs via HTTP-Sitemap-Abruf automatisch korrekt übermittelt.
 
 ---
 
@@ -14,7 +14,7 @@ Companion-Plugin zu [_seo_urls](https://github.com/bernhardunger/moziloCMS_seo_p
 | **Auto-Detect Host** | Hostname wird aus `HTTP_HOST` ermittelt wenn das Config-Feld leer bleibt |
 | **Auto-Detect Sitemap** | Sitemap-URL wird aus dem Host abgeleitet (`https://{host}/sitemap.xml`) wenn nicht konfiguriert |
 | **IndexNow POST** | Alle URLs in einer einzigen Batch-Anfrage übermittelt |
-| **Admin-Panel** | Submit-Button direkt auf einer CMS-Seite einbettbar |
+| **Admin-Panel** | Direkt über den Button „Admin-Panel öffnen" in der Plugin-Konfiguration erreichbar |
 | **Status-Feedback** | HTTP-Statuscode und Ergebnismeldung direkt im Panel |
 | **Debug-Modus** | Zeigt URL-Liste und JSON-Payload im Browser – kein echter API-Call |
 | **CSRF-Schutz** | One-Time-Token via Session für den Submit-Button |
@@ -104,7 +104,7 @@ Debug-Modus in den Plugin-Einstellungen aktivieren → der Submit-Button sendet 
 
 ## Zusammenspiel mit _seo_urls
 
-Das Plugin liest die `sitemap.xml` **per HTTP-Abruf** – dadurch werden die Slug-URLs, die `_seo_urls` on-the-fly in die Sitemap schreibt, automatisch korrekt übernommen. Es ist keine manuelle Konfiguration der Slug-URLs nötig.
+Das Plugin liest die `sitemap.xml` **per HTTP-Abruf** – wenn das `_seo_urls` Plugin vorhanden und aktiv ist, werden dessen Slug-URLs automatisch korrekt übernommen. Es ist keine manuelle Konfiguration der Slug-URLs nötig. Ohne `_seo_urls` werden die in der Sitemap vorhandenen URLs verwendet.
 
 ---
 
@@ -150,7 +150,7 @@ moziloCMS_indexnow_plugin/
 - Auto-Detect Host via `HTTP_HOST`
 - Auto-Ableitung Sitemap-URL aus Host
 - Konfigurierbarer Endpunkt mit Default `https://api.indexnow.org/indexnow`
-- Admin-Panel als einbettbarer CMS-Seiteninhalt
+- Admin-Panel direkt über den Button in der Plugin-Konfiguration erreichbar
 - Debug-Modus mit URL-Liste und JSON-Payload-Preview
 - CSRF-Schutz (One-Time-Token)
 
