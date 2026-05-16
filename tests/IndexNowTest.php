@@ -1,4 +1,5 @@
 <?php
+
 /**
  * PHPUnit Testsuite für das indexnow Plugin.
  *
@@ -75,9 +76,9 @@ class IndexNowTest extends TestCase {
     #[Test]
     public function extractUrls_fremderHost_wirdGefiltert(): void {
         $xml = '<urlset>'
-             . '<url><loc>https://www.example.com/seite/</loc></url>'
-             . '<url><loc>https://www.fremd.de/seite/</loc></url>'
-             . '</urlset>';
+            . '<url><loc>https://www.example.com/seite/</loc></url>'
+            . '<url><loc>https://www.fremd.de/seite/</loc></url>'
+            . '</urlset>';
         $result = $this->call('extractUrls', $xml, 'www.example.com');
         $this->assertSame(['https://www.example.com/seite/'], $result);
     }
@@ -85,9 +86,9 @@ class IndexNowTest extends TestCase {
     #[Test]
     public function extractUrls_duplikate_werdenEntfernt(): void {
         $xml = '<urlset>'
-             . '<url><loc>https://www.example.com/seite/</loc></url>'
-             . '<url><loc>https://www.example.com/seite/</loc></url>'
-             . '</urlset>';
+            . '<url><loc>https://www.example.com/seite/</loc></url>'
+            . '<url><loc>https://www.example.com/seite/</loc></url>'
+            . '</urlset>';
         $result = $this->call('extractUrls', $xml, 'www.example.com');
         $this->assertCount(1, $result);
         $this->assertSame('https://www.example.com/seite/', $result[0]);
@@ -96,9 +97,9 @@ class IndexNowTest extends TestCase {
     #[Test]
     public function extractUrls_ungueltigeUrl_wirdGefiltert(): void {
         $xml = '<urlset>'
-             . '<url><loc>kein-url</loc></url>'
-             . '<url><loc>https://www.example.com/gueltig/</loc></url>'
-             . '</urlset>';
+            . '<url><loc>kein-url</loc></url>'
+            . '<url><loc>https://www.example.com/gueltig/</loc></url>'
+            . '</urlset>';
         $result = $this->call('extractUrls', $xml, 'www.example.com');
         $this->assertSame(['https://www.example.com/gueltig/'], $result);
     }
@@ -106,9 +107,9 @@ class IndexNowTest extends TestCase {
     #[Test]
     public function extractUrls_nichtHttpSchema_wirdGefiltert(): void {
         $xml = '<urlset>'
-             . '<url><loc>ftp://www.example.com/seite/</loc></url>'
-             . '<url><loc>https://www.example.com/gueltig/</loc></url>'
-             . '</urlset>';
+            . '<url><loc>ftp://www.example.com/seite/</loc></url>'
+            . '<url><loc>https://www.example.com/gueltig/</loc></url>'
+            . '</urlset>';
         $result = $this->call('extractUrls', $xml, 'www.example.com');
         $this->assertSame(['https://www.example.com/gueltig/'], $result);
     }
@@ -130,10 +131,10 @@ class IndexNowTest extends TestCase {
     #[Test]
     public function extractUrls_mehrereGueltigeUrls_alleZurueckgegeben(): void {
         $xml = '<urlset>'
-             . '<url><loc>https://www.example.com/</loc></url>'
-             . '<url><loc>https://www.example.com/kontakt/</loc></url>'
-             . '<url><loc>https://www.example.com/leistungen/</loc></url>'
-             . '</urlset>';
+            . '<url><loc>https://www.example.com/</loc></url>'
+            . '<url><loc>https://www.example.com/kontakt/</loc></url>'
+            . '<url><loc>https://www.example.com/leistungen/</loc></url>'
+            . '</urlset>';
         $result = $this->call('extractUrls', $xml, 'www.example.com');
         $this->assertCount(3, $result);
     }
@@ -274,7 +275,7 @@ class IndexNowTest extends TestCase {
 
     #[Test]
     public function getEffectiveHost_hostMitPfad_nurHostTeilWirdZurueckgegeben(): void {
-        $this->setSetting('host', 'localhost/stb-hader');
+        $this->setSetting('host', 'localhost/mein-pfad');
         $result = $this->call('getEffectiveHost');
         $this->assertSame('localhost', $result);
     }
@@ -340,38 +341,63 @@ class IndexNowTest extends TestCase {
 
     #[Test]
     public function buildDebugOutput_enthaeltVersion(): void {
-        $result = $this->call('buildDebugOutput', 'www.example.com', 'abc123',
-            'https://api.indexnow.org/indexnow', ['https://www.example.com/']);
+        $result = $this->call(
+            'buildDebugOutput',
+            'www.example.com',
+            'abc123',
+            'https://api.indexnow.org/indexnow',
+            ['https://www.example.com/']
+        );
         $this->assertStringContainsString(indexnow::VERSION, $result);
     }
 
     #[Test]
     public function buildDebugOutput_enthaeltEndpunkt(): void {
-        $result = $this->call('buildDebugOutput', 'www.example.com', 'abc123',
-            'https://api.indexnow.org/indexnow', ['https://www.example.com/']);
+        $result = $this->call(
+            'buildDebugOutput',
+            'www.example.com',
+            'abc123',
+            'https://api.indexnow.org/indexnow',
+            ['https://www.example.com/']
+        );
         $this->assertStringContainsString('https://api.indexnow.org/indexnow', $result);
     }
 
     #[Test]
     public function buildDebugOutput_enthaeltHost(): void {
-        $result = $this->call('buildDebugOutput', 'www.example.com', 'abc123',
-            'https://api.indexnow.org/indexnow', ['https://www.example.com/']);
+        $result = $this->call(
+            'buildDebugOutput',
+            'www.example.com',
+            'abc123',
+            'https://api.indexnow.org/indexnow',
+            ['https://www.example.com/']
+        );
         $this->assertStringContainsString('www.example.com', $result);
     }
 
     #[Test]
     public function buildDebugOutput_enthaeltUrlAnzahl(): void {
         $urls   = ['https://www.example.com/', 'https://www.example.com/kontakt/'];
-        $result = $this->call('buildDebugOutput', 'www.example.com', 'abc123',
-            'https://api.indexnow.org/indexnow', $urls);
+        $result = $this->call(
+            'buildDebugOutput',
+            'www.example.com',
+            'abc123',
+            'https://api.indexnow.org/indexnow',
+            $urls
+        );
         $this->assertStringContainsString('2 gefunden', $result);
     }
 
     #[Test]
     public function buildDebugOutput_enthaeltAlleUrls(): void {
         $urls   = ['https://www.example.com/', 'https://www.example.com/kontakt/'];
-        $result = $this->call('buildDebugOutput', 'www.example.com', 'abc123',
-            'https://api.indexnow.org/indexnow', $urls);
+        $result = $this->call(
+            'buildDebugOutput',
+            'www.example.com',
+            'abc123',
+            'https://api.indexnow.org/indexnow',
+            $urls
+        );
         foreach ($urls as $url) {
             $this->assertStringContainsString($url, $result);
         }
@@ -380,8 +406,13 @@ class IndexNowTest extends TestCase {
     #[Test]
     public function buildDebugOutput_enthaeltGueltigesJson(): void {
         $urls   = ['https://www.example.com/'];
-        $result = $this->call('buildDebugOutput', 'www.example.com', 'abc123',
-            'https://api.indexnow.org/indexnow', $urls);
+        $result = $this->call(
+            'buildDebugOutput',
+            'www.example.com',
+            'abc123',
+            'https://api.indexnow.org/indexnow',
+            $urls
+        );
 
         // JSON-Block aus der Ausgabe extrahieren
         $jsonStart = strpos($result, '{');
@@ -396,8 +427,13 @@ class IndexNowTest extends TestCase {
 
     #[Test]
     public function buildDebugOutput_keyDateiUrlKorrekt(): void {
-        $result = $this->call('buildDebugOutput', 'www.example.com', 'abc123',
-            'https://api.indexnow.org/indexnow', ['https://www.example.com/']);
+        $result = $this->call(
+            'buildDebugOutput',
+            'www.example.com',
+            'abc123',
+            'https://api.indexnow.org/indexnow',
+            ['https://www.example.com/']
+        );
         $this->assertStringContainsString('www.example.com/abc123.txt', $result);
     }
 
@@ -549,8 +585,10 @@ class IndexNowTest extends TestCase {
 
     #[Test]
     public function validateSettings_alleGueltig_gibtNullZurueck(): void {
-        $result = $this->call('validateSettings',
-            'abc12345', 'www.example.com',
+        $result = $this->call(
+            'validateSettings',
+            'abc12345',
+            'www.example.com',
             'https://www.example.com/sitemap.xml',
             'https://api.indexnow.org/indexnow'
         );
@@ -559,36 +597,61 @@ class IndexNowTest extends TestCase {
 
     #[Test]
     public function validateSettings_apiKeyLeer_fehlermeldung(): void {
-        $result = $this->call('validateSettings', '', 'www.example.com',
-            'https://www.example.com/sitemap.xml', 'https://api.indexnow.org/indexnow');
+        $result = $this->call(
+            'validateSettings',
+            '',
+            'www.example.com',
+            'https://www.example.com/sitemap.xml',
+            'https://api.indexnow.org/indexnow'
+        );
         $this->assertStringContainsString('API-Key', $result);
     }
 
     #[Test]
     public function validateSettings_apiKeyUngueltig_fehlermeldung(): void {
-        $result = $this->call('validateSettings', 'kurz', 'www.example.com',
-            'https://www.example.com/sitemap.xml', 'https://api.indexnow.org/indexnow');
+        $result = $this->call(
+            'validateSettings',
+            'kurz',
+            'www.example.com',
+            'https://www.example.com/sitemap.xml',
+            'https://api.indexnow.org/indexnow'
+        );
         $this->assertStringContainsString('Fehler', $result);
     }
 
     #[Test]
     public function validateSettings_hostLeer_fehlermeldung(): void {
-        $result = $this->call('validateSettings', 'abc12345', '',
-            'https://www.example.com/sitemap.xml', 'https://api.indexnow.org/indexnow');
+        $result = $this->call(
+            'validateSettings',
+            'abc12345',
+            '',
+            'https://www.example.com/sitemap.xml',
+            'https://api.indexnow.org/indexnow'
+        );
         $this->assertStringContainsString('Host', $result);
     }
 
     #[Test]
     public function validateSettings_sitemapLeer_fehlermeldung(): void {
-        $result = $this->call('validateSettings', 'abc12345', 'www.example.com',
-            '', 'https://api.indexnow.org/indexnow');
+        $result = $this->call(
+            'validateSettings',
+            'abc12345',
+            'www.example.com',
+            '',
+            'https://api.indexnow.org/indexnow'
+        );
         $this->assertStringContainsString('Sitemap', $result);
     }
 
     #[Test]
     public function validateSettings_endpunktUngueltig_fehlermeldung(): void {
-        $result = $this->call('validateSettings', 'abc12345', 'www.example.com',
-            'https://www.example.com/sitemap.xml', 'kein-url');
+        $result = $this->call(
+            'validateSettings',
+            'abc12345',
+            'www.example.com',
+            'https://www.example.com/sitemap.xml',
+            'kein-url'
+        );
         $this->assertStringContainsString('Endpunkt', $result);
     }
 
