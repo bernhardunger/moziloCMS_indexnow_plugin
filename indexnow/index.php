@@ -117,7 +117,7 @@ Yandex und weitere unterstützte Suchmaschinen.</p>
 
 <h4>Einrichtung</h4>
 <ol>
-  <li>API-Key generieren unter <a href="' . self::INDEXNOW_GETSTARTED_URL . '" target="_blank">bing.com/indexnow/getstarted</a> – das Tool erstellt Key und Key-Datei fertig zum Download</li>
+  <li>API-Key generieren unter <a href="' . self::INDEXNOW_GETSTARTED_URL . '" target="_blank">' . str_replace('https://www.', '', self::INDEXNOW_GETSTARTED_URL) . '</a> – das Tool erstellt Key und Key-Datei fertig zum Download</li>
   <li>Key-Datei <code>{key}.txt</code> in den Webroot hochladen</li>
   <li>Nur den API-Key im Plugin konfigurieren – Host und Sitemap-URL werden automatisch erkannt</li>
   <li>Admin-Panel über den Button „Admin-Panel öffnen" in der Plugin-Konfiguration aufrufen</li>
