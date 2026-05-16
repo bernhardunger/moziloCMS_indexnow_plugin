@@ -10,7 +10,7 @@ Companion-Plugin zu [_seo_urls](https://github.com/bernhardunger/moziloCMS_seo_p
 
 | Feature | Beschreibung |
 |---|---|
-| **Sitemap-Abruf per HTTP** | Liest die `sitemap.xml` live per HTTP – Slug-URLs des `_seo_urls` Plugins werden automatisch übernommen |
+| **Sitemap-Abruf per HTTP** | Liest die `sitemap.xml` live per HTTP – Slug-URLs des `_seo_urls` Plugins werden automatisch übernommen, wenn es vorhanden und aktiv ist – sonst werden die vorhandenen Sitemap-URLs verwendet |
 | **Auto-Detect Host** | Hostname wird aus `HTTP_HOST` ermittelt wenn das Config-Feld leer bleibt |
 | **Auto-Detect Sitemap** | Sitemap-URL wird aus dem Host abgeleitet (`https://{host}/sitemap.xml`) wenn nicht konfiguriert |
 | **IndexNow POST** | Alle URLs in einer einzigen Batch-Anfrage übermittelt |
